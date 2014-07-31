@@ -216,31 +216,18 @@ static struct clkctl_acpu_speed pll0_960_pll1_196_pll2_1200_pll4_800[] = {
 	{ 0 }
 };
 
- /* 7627aa PLL4 @ 1008MHz with GSM capable modem Xperia J OC */
+/* 7627aa PLL4 @ 1008MHz with GSM capable modem */
 static struct clkctl_acpu_speed pll0_960_pll1_245_pll2_1200_pll4_1008[] = {
-    { 0, 19200, ACPU_PLL_TCXO, 0, 0, 2400, 3, 0, 30720 },
-    { 0, 61440, ACPU_PLL_1, 1, 3,  7680, 3, 1, 61440 },
-    { 1, 122880, ACPU_PLL_1, 1, 1,  15360, 3, 2, 61440 },
-    { 1, 245760, ACPU_PLL_1, 1, 0, 30720, 3, 3, 61440 },
-    { 0, 300000, ACPU_PLL_2, 2, 3, 37500, 3, 4, 122880 },
-    { 1, 320000, ACPU_PLL_0, 4, 2, 40000, 3, 4, 122880 },
-    { 1, 480000, ACPU_PLL_0, 4, 1, 60000, 3, 5, 122880 },
-    { 0, 504000, ACPU_PLL_4, 6, 1, 63000, 3, 6, 160000 },
-    { 1, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 6, 160000 },
-    { 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 7, 200000},
-    { 1, 1036800, ACPU_PLL_4, 6, 0, 129600, 3, 7, 200000 },
-    { 1, 1056000, ACPU_PLL_4, 6, 0, 132000, 3, 7, 200000 },
-    { 1, 1113600, ACPU_PLL_4, 6, 0, 139200, 3, 7, 200000 },
-	{ 1, 1152000, ACPU_PLL_4, 6, 0, 144000, 3, 7, 200000 },
-	{ 1, 1190400, ACPU_PLL_4, 6, 0, 148800, 3, 7, 200000 },
-	{ 1, 1228800, ACPU_PLL_4, 6, 0, 153600, 3, 7, 200000 },
-	{ 1, 1267200, ACPU_PLL_4, 6, 0, 158400, 3, 7, 200000 },
-	{ 1, 1305600, ACPU_PLL_4, 6, 0, 163200, 3, 7, 200000 },
-	{ 1, 1405600, ACPU_PLL_4, 6, 0, 167700, 3, 7, 200000 },
-	{ 1, 1505600, ACPU_PLL_4, 6, 0, 172200, 3, 7, 200000 },
-	{ 1, 1605600, ACPU_PLL_4, 6, 0, 176700, 3, 7, 200000 },
-	{ 1, 1705600, ACPU_PLL_4, 6, 0, 181200, 3, 7, 200000 },
-	{ 1, 1805600, ACPU_PLL_4, 6, 0, 185700, 3, 7, 200000 },
+	{ 0, 19200, ACPU_PLL_TCXO, 0, 0, 2400, 3, 0, 30720 },
+	{ 0, 61440, ACPU_PLL_1, 1, 3,  7680, 3, 1, 61440 },
+	{ 1, 122880, ACPU_PLL_1, 1, 1,  15360, 3, 2, 61440 },
+	{ 1, 245760, ACPU_PLL_1, 1, 0, 30720, 3, 3, 61440 },
+	{ 0, 300000, ACPU_PLL_2, 2, 3, 37500, 3, 4, 122880 },
+	{ 1, 320000, ACPU_PLL_0, 4, 2, 40000, 3, 4, 122880 },
+	{ 1, 480000, ACPU_PLL_0, 4, 1, 60000, 3, 5, 122880 },
+	{ 0, 504000, ACPU_PLL_4, 6, 1, 63000, 3, 6, 160000 },
+	{ 1, 600000, ACPU_PLL_2, 2, 1, 75000, 3, 6, 160000 },
+	{ 1, 1008000, ACPU_PLL_4, 6, 0, 126000, 3, 7, 200000},
 	{ 0 }
 };
 
@@ -503,11 +490,6 @@ static struct pll_freq_tbl_map acpu_freq_tbl_list[] = {
 	PLL_CONFIG(960, 196, 1200, 1401),
 	{ 0, 0, 0, 0, 0 }
 };
-/*FIH-SW3-KERNEL-JC-S1VDDSwitch+[ */
-#ifdef CONFIG_FIH_SEMC_S1
-static int vdderror = 0;
-#endif
-/*FIH-SW3-KERNEL-JC-S1VDDSwitch+] */
 
 #ifdef CONFIG_CPU_FREQ_MSM
 static struct cpufreq_frequency_table freq_table[NR_CPUS][20];
@@ -592,20 +574,8 @@ static int acpuclk_set_vdd_level(int vdd)
 	mb();
 	udelay(62);
 	if ((readl_relaxed(A11S_VDD_SVS_PLEVEL_ADDR) & 0x7) != vdd) {
-	/*FIH-SW3-KERNEL-JC-S1VDDSwitch+[ */
-#ifdef CONFIG_FIH_SEMC_S1
-		vdderror++;
-		if(vdderror > 50)
-		{
-			pr_err("ACPU VDD set failed\n");
-			vdderror = 0;
-		}
-		return 0;
-#else
 		pr_err("VDD set failed\n");
 		return -EIO;
-#endif
-	/*FIH-SW3-KERNEL-JC-S1VDDSwitch+] */
 	}
 
 	pr_debug("VDD switched\n");
@@ -749,11 +719,12 @@ static int acpuclk_7627_set_rate(int cpu, unsigned long rate,
 				 */
 				clk_enable(pll_clk[backup_s->pll].clk);
 				acpuclk_set_div(backup_s);
+				update_jiffies(cpu, backup_s->lpj);
 			}
 			/* Make sure PLL4 is off before reprogramming */
 			if ((plls_enabled & (1 << tgt_s->pll))) {
 				clk_disable(pll_clk[tgt_s->pll].clk);
-				plls_enabled &= (0 << tgt_s->pll);
+				plls_enabled &= ~(1 << tgt_s->pll);
 			}
 			acpuclk_config_pll4(tgt_s->pll_rate);
 			pll_clk[tgt_s->pll].clk->rate = tgt_s->a11clk_khz*1000;
@@ -766,10 +737,12 @@ static int acpuclk_7627_set_rate(int cpu, unsigned long rate,
 				 */
 				clk_enable(pll_clk[backup_s->pll].clk);
 				acpuclk_set_div(backup_s);
+				update_jiffies(cpu, backup_s->lpj);
 			}
 		}
 
-		if (!(plls_enabled & (1 << tgt_s->pll))) {
+		if ((tgt_s->pll != ACPU_PLL_TCXO) &&
+				!(plls_enabled & (1 << tgt_s->pll))) {
 			rc = clk_enable(pll_clk[tgt_s->pll].clk);
 			if (rc < 0) {
 				pr_err("PLL%d enable failed (%d)\n",
@@ -857,7 +830,8 @@ done:
 		goto out;
 
 	/* Change the AXI bus frequency if we can. */
-	if (strt_s->axiclk_khz != tgt_s->axiclk_khz) {
+	if (reason != SETRATE_PC &&
+		strt_s->axiclk_khz != tgt_s->axiclk_khz) {
 		res = clk_set_rate(drv_state.ebi1_clk,
 				tgt_s->axiclk_khz * 1000);
 		if (res < 0)
@@ -894,6 +868,14 @@ static void __devinit acpuclk_hw_init(void)
 	struct clkctl_acpu_speed *speed;
 	uint32_t div, sel, reg_clksel;
 	int res;
+
+	// << FerryWu, 2012/06/14, SoMC S1 boot integration
+	#if defined(CONFIG_SEMC_S1)
+	reg_clksel = readl_relaxed(A11S_CLK_SEL_ADDR);
+	reg_clksel |= (0x1 << 11);
+	writel_relaxed(reg_clksel, A11S_CLK_SEL_ADDR);
+	#endif /*  CONFIG_SEMC_S1 */
+	// >> FerryWu, 2012/06/14, SoMC S1 boot integration
 
 	/*
 	 * Prepare all the PLLs because we enable/disable them
@@ -1191,29 +1173,12 @@ static struct acpuclk_data acpuclk_7627_data = {
 	.switch_time_us = 50,
 };
 
-
-/* FIH-SW3-KERNEL-HC-S1_Clk_Patch-00+[ */
-#ifdef CONFIG_FIH_SEMC_S1
-void appsboot_acpu_clock_init(void)
-{
-	writel_relaxed(0x00642123, A11S_CLK_CNTL_ADDR);
-	writel_relaxed(0x00000ff8, A11S_CLK_SEL_ADDR);
-}
-#endif
-/* FIH-SW3-KERNEL-HC-S1_Clk_Patch-00+] */
-
 static int __devinit acpuclk_7627_probe(struct platform_device *pdev)
 {
 	const struct acpuclk_pdata *pdata = pdev->dev.platform_data;
 
 	pr_info("%s()\n", __func__);
-	
-	/* FIH-SW3-KERNEL-HC-S1_Clk_Patch-00+[ */
-	#ifdef CONFIG_FIH_SEMC_S1
-	appsboot_acpu_clock_init();
-	#endif
-	/* FIH-SW3-KERNEL-HC-S1_Clk_Patch-00+] */
-	
+
 	drv_state.ebi1_clk = clk_get(NULL, "ebi1_acpu_clk");
 	BUG_ON(IS_ERR(drv_state.ebi1_clk));
 
